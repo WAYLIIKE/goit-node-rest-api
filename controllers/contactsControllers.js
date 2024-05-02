@@ -81,8 +81,9 @@ export const changeContact = async (req, res, next) => {
     const { id } = req.params;
 
     const { name, email, phone } = value;
+    const updatingData = { name, email, phone };
 
-    const contact = await updateContact(id, { name, email, phone });
+    const contact = await updateContact(id, updatingData);
 
     if (!contact) throw new HttpError(404);
 
