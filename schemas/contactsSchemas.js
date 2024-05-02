@@ -21,5 +21,8 @@ export const updateContactSchema = validateBody(data =>
       email: Joi.string().email(),
       phone: Joi.string().min(4).max(30),
     })
+    .messages({
+      'object.missing': 'Body must have at least one field',
+    })
     .validate(data),
 );
