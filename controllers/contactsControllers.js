@@ -1,4 +1,5 @@
 import { HttpError } from '../helpers/HttpError.js';
+import { validateBody } from '../helpers/validateBody.js';
 import {
   createContactSchema,
   updateContactSchema,
@@ -27,6 +28,8 @@ export const getOneContact = async (req, res, next) => {
 
     const contact = await getContactById(id);
 
+    if (!contact) throw new HttpError(404);
+
     res.status(200).json(contact);
   } catch (error) {
     next(error);
@@ -39,6 +42,8 @@ export const deleteContact = async (req, res, next) => {
 
     const contact = await removeContact(id);
 
+    if (!contact) throw new HttpError(404);
+
     res.status(200).json(contact);
   } catch (error) {
     next(error);
@@ -47,7 +52,7 @@ export const deleteContact = async (req, res, next) => {
 
 export const createContact = async (req, res, next) => {
   try {
-    const { value, error } = createContactSchema(req.body);
+    const { value, error } = validateBody(createContactSchema, req.body);
 
     if (error) throw new HttpError(400, error);
 
@@ -69,7 +74,7 @@ export const createContact = async (req, res, next) => {
 
 export const changeContact = async (req, res, next) => {
   try {
-    const { value, error } = updateContactSchema(req.body);
+    const { value, error } = validateBody(updateContactSchema, req.body);
 
     if (error) throw new HttpError(400, error);
 
@@ -77,16 +82,9 @@ export const changeContact = async (req, res, next) => {
 
     const { name, email, phone } = value;
 
-    // Validate count of params in body
-    const oldContact = await getContactById(id);
+    const contact = await updateContact(id, { name, email, phone });
 
-    const newContact = {
-      name: name ? name : oldContact.name,
-      email: email ? email : oldContact.email,
-      phone: phone ? phone : oldContact.phone,
-    };
-
-    const contact = await updateContact(id, newContact);
+    if (!contact) throw new HttpError(404);
 
     res.status(200).json(contact);
   } catch (error) {

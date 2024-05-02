@@ -74,11 +74,13 @@ export async function addContact(contact) {
 export async function updateContact(id, contact) {
   const { name, email, phone } = contact;
 
+  const oldContact = await getContactById(id);
+
   const updatedContact = {
     id,
-    name,
-    email,
-    phone,
+    name: name ? name : oldContact.name,
+    email: email ? email : oldContact.email,
+    phone: phone ? phone : oldContact.phone,
   };
 
   try {

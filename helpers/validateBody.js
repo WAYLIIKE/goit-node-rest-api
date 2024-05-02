@@ -1,5 +1,5 @@
-export const validateBody = schema => data => {
-  const { error, value } = schema(data);
+export const validateBody = (schema, data) => {
+  const { error, value } = schema.validate(data);
 
   if (!error) return { value };
 
