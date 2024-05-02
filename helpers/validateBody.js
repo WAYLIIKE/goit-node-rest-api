@@ -1,15 +1,9 @@
-import HttpError from "./HttpError.js";
+export const validateBody = schema => data => {
+  const { error, value } = schema(data);
 
-const validateBody = (schema) => {
-  const func = (req, _, next) => {
-    const { error } = schema.validate(req.body);
-    if (error) {
-      next(HttpError(400, error.message));
-    }
-    next();
+  if (!error) return { value };
+
+  return {
+    error: error.details.map(err => err.message),
   };
-
-  return func;
 };
-
-export default validateBody;

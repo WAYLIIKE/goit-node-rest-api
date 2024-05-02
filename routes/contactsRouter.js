@@ -1,22 +1,22 @@
-import express from "express";
+import express from 'express';
 import {
+  createContact,
+  deleteContact,
   getAllContacts,
   getOneContact,
-  deleteContact,
-  createContact,
-  updateContact,
-} from "../controllers/contactsControllers.js";
+  changeContact,
+} from '../controllers/contactsControllers.js';
+import { checkContactId } from '../middlewares/contactsMiddlewares.js';
 
 const contactsRouter = express.Router();
 
-contactsRouter.get("/", getAllContacts);
+contactsRouter.route('/').get(getAllContacts).post(createContact);
 
-contactsRouter.get("/:id", getOneContact);
+contactsRouter.use('/:id', checkContactId);
+contactsRouter
+  .route('/:id')
+  .get(getOneContact)
+  .delete(deleteContact)
+  .put(changeContact);
 
-contactsRouter.delete("/:id", deleteContact);
-
-contactsRouter.post("/", createContact);
-
-contactsRouter.put("/:id", updateContact);
-
-export default contactsRouter;
+export { contactsRouter };
