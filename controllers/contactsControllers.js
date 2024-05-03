@@ -1,11 +1,94 @@
-import contactsService from "../services/contactsServices.js";
+import { HttpError } from '../helpers/HttpError.js';
+import { validateBody } from '../helpers/validateBody.js';
+import {
+  createContactSchema,
+  updateContactSchema,
+} from '../schemas/contactsSchemas.js';
+import {
+  addContact,
+  getContactById,
+  listContacts,
+  removeContact,
+  updateContact,
+} from '../services/contactsServices.js';
 
-export const getAllContacts = (req, res) => {};
+export const getAllContacts = async (req, res, next) => {
+  try {
+    const contacts = await listContacts();
 
-export const getOneContact = (req, res) => {};
+    res.status(200).json(contacts);
+  } catch (error) {
+    next(error);
+  }
+};
 
-export const deleteContact = (req, res) => {};
+export const getOneContact = async (req, res, next) => {
+  try {
+    const { id } = req.params;
 
-export const createContact = (req, res) => {};
+    const contact = await getContactById(id);
 
-export const updateContact = (req, res) => {};
+    if (!contact) throw new HttpError(404);
+
+    res.status(200).json(contact);
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const deleteContact = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+
+    const contact = await removeContact(id);
+
+    if (!contact) throw new HttpError(404);
+
+    res.status(200).json(contact);
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const createContact = async (req, res, next) => {
+  try {
+    const { value, error } = validateBody(createContactSchema, req.body);
+
+    if (error) throw new HttpError(400, error);
+
+    const { name, email, phone } = value;
+
+    const newContact = {
+      name,
+      email,
+      phone,
+    };
+
+    const contact = await addContact(newContact);
+
+    res.status(201).json(contact);
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const changeContact = async (req, res, next) => {
+  try {
+    const { value, error } = validateBody(updateContactSchema, req.body);
+
+    if (error) throw new HttpError(400, error);
+
+    const { id } = req.params;
+
+    const { name, email, phone } = value;
+    const updatingData = { name, email, phone };
+
+    const contact = await updateContact(id, updatingData);
+
+    if (!contact) throw new HttpError(404);
+
+    res.status(200).json(contact);
+  } catch (error) {
+    next(error);
+  }
+};
