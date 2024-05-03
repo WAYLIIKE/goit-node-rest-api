@@ -1,16 +1,19 @@
-import { HttpError } from '../helpers/HttpError.js';
-import { validateBody } from '../helpers/validateBody.js';
-import {
-  createContactSchema,
-  updateContactSchema,
-} from '../schemas/contactsSchemas.js';
 import {
   addContact,
-  getContactById,
   listContacts,
   removeContact,
   updateContact,
 } from '../services/contactsServices.js';
+
+export const createContact = async (req, res, next) => {
+  try {
+    const contact = await addContact(req.contact);
+
+    res.status(201).json(contact);
+  } catch (error) {
+    next(error);
+  }
+};
 
 export const getAllContacts = async (req, res, next) => {
   try {
@@ -24,11 +27,7 @@ export const getAllContacts = async (req, res, next) => {
 
 export const getOneContact = async (req, res, next) => {
   try {
-    const { id } = req.params;
-
-    const contact = await getContactById(id);
-
-    if (!contact) throw new HttpError(404);
+    const { contact } = req;
 
     res.status(200).json(contact);
   } catch (error) {
@@ -38,11 +37,9 @@ export const getOneContact = async (req, res, next) => {
 
 export const deleteContact = async (req, res, next) => {
   try {
-    const { id } = req.params;
+    const { contact } = req;
 
-    const contact = await removeContact(id);
-
-    if (!contact) throw new HttpError(404);
+    await removeContact(contact.id);
 
     res.status(200).json(contact);
   } catch (error) {
@@ -50,42 +47,23 @@ export const deleteContact = async (req, res, next) => {
   }
 };
 
-export const createContact = async (req, res, next) => {
+export const changeContact = async (req, res, next) => {
   try {
-    const { value, error } = validateBody(createContactSchema, req.body);
+    const { newContact, id } = req;
 
-    if (error) throw new HttpError(400, error);
+    const contact = await updateContact(id, newContact);
 
-    const { name, email, phone } = value;
-
-    const newContact = {
-      name,
-      email,
-      phone,
-    };
-
-    const contact = await addContact(newContact);
-
-    res.status(201).json(contact);
+    res.status(200).json(contact);
   } catch (error) {
     next(error);
   }
 };
 
-export const changeContact = async (req, res, next) => {
+export const updateFavorite = async (req, res, next) => {
   try {
-    const { value, error } = validateBody(updateContactSchema, req.body);
+    const { statusData, id } = req;
 
-    if (error) throw new HttpError(400, error);
-
-    const { id } = req.params;
-
-    const { name, email, phone } = value;
-    const updatingData = { name, email, phone };
-
-    const contact = await updateContact(id, updatingData);
-
-    if (!contact) throw new HttpError(404);
+    const contact = await updateContact(id, statusData);
 
     res.status(200).json(contact);
   } catch (error) {
