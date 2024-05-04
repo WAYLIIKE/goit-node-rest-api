@@ -9,18 +9,13 @@ import {
   updateFavorite,
 } from '../controllers/contactsControllers.js';
 
-import {
-  checkContactCreate,
-  checkContactId,
-  checkContactUpdate,
-  checkStatusContact,
-} from '../middlewares/contactMiddlewares.js';
+import { checkContactId } from '../middlewares/contactMiddlewares.js';
 
 const contactsRouter = express.Router();
 
 contactsRouter.get('/', getAllContacts);
 
-contactsRouter.post('/', checkContactCreate, createContact);
+contactsRouter.post('/', createContact);
 
 contactsRouter.use('/:id', checkContactId);
 
@@ -28,8 +23,8 @@ contactsRouter.get('/:id', getOneContact);
 
 contactsRouter.delete('/:id', deleteContact);
 
-contactsRouter.put('/:id', checkContactUpdate, changeContact);
+contactsRouter.put('/:id', changeContact);
 
-contactsRouter.patch('/:id/favorite', checkStatusContact, updateFavorite);
+contactsRouter.patch('/:id/favorite', updateFavorite);
 
 export { contactsRouter };

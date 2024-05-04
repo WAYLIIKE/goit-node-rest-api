@@ -25,7 +25,8 @@ export async function getContactById(contactId) {
 // Delete contact by id.
 export async function removeContact(contactId) {
   try {
-    await Contact.findByIdAndDelete(contactId);
+    const contact = await Contact.findByIdAndDelete(contactId);
+    return contact;
   } catch (error) {
     return error;
   }
