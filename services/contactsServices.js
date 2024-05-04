@@ -1,15 +1,11 @@
-import { promises as fs } from 'fs';
-import path from 'path';
-import { v4 } from 'uuid';
-
-const contactsPath = path.join('./db', 'contacts.json');
+import { Contact } from '../models/contactModel.js';
 
 // Returns contacts array.
 export async function listContacts() {
   try {
-    const contacts = await fs.readFile(contactsPath);
+    const contacts = await Contact.find();
 
-    return JSON.parse(contacts);
+    return contacts;
   } catch (error) {
     return error;
   }
@@ -18,26 +14,19 @@ export async function listContacts() {
 // Returns contact object. Returns null, if contact with contactsID was undefined.
 export async function getContactById(contactId) {
   try {
-    const contacts = await listContacts();
+    const contact = await Contact.findById(contactId);
 
-    const isContact = contacts.find(item => item.id === contactId);
-    return isContact || null;
+    return contact;
   } catch (error) {
     return error;
   }
 }
 
-// Returns deleted contact object. Returns null, if contact with contactsID was undefined.
+// Delete contact by id.
 export async function removeContact(contactId) {
   try {
-    const contacts = await listContacts();
-    const deletedContactIdx = contacts.findIndex(item => item.id === contactId);
-
-    if (deletedContactIdx === -1) return null;
-
-    const deletedContact = contacts.splice(deletedContactIdx, 1);
-    await fs.writeFile(contactsPath, JSON.stringify(contacts));
-    return deletedContact;
+    const contact = await Contact.findByIdAndDelete(contactId);
+    return contact;
   } catch (error) {
     return error;
   }
@@ -45,25 +34,9 @@ export async function removeContact(contactId) {
 
 // Returns added contact object with ID.
 export async function addContact(contact) {
-  const { name, email, phone } = contact;
-
-  if (!name || !email || !phone) {
-    throw new Error('Enter all data');
-  }
-
   try {
-    const contacts = await listContacts();
+    const newContact = await Contact.create(contact);
 
-    const newContact = {
-      id: v4(),
-      name,
-      email,
-      phone,
-    };
-
-    const newContactsArray = [...contacts, newContact];
-
-    await fs.writeFile(contactsPath, JSON.stringify(newContactsArray));
     return newContact;
   } catch (error) {
     return error;
@@ -72,27 +45,11 @@ export async function addContact(contact) {
 
 // Returns updated contact object.
 export async function updateContact(id, contact) {
-  const { name, email, phone } = contact;
-
-  const oldContact = await getContactById(id);
-
-  const updatedContact = {
-    id,
-    name: name ? name : oldContact.name,
-    email: email ? email : oldContact.email,
-    phone: phone ? phone : oldContact.phone,
-  };
-
   try {
-    const contacts = await listContacts();
-    const updatedContacts = [...contacts];
-    const updatedContactIdx = updatedContacts.findIndex(item => item.id === id);
+    const updatedContact = await Contact.findByIdAndUpdate(id, contact, {
+      new: true,
+    });
 
-    if (updatedContactIdx === -1) return null;
-
-    updatedContacts[updatedContactIdx] = updatedContact;
-
-    await fs.writeFile(contactsPath, JSON.stringify(updatedContacts));
     return updatedContact;
   } catch (error) {
     return error;

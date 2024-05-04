@@ -3,7 +3,9 @@ import { validateBody } from '../helpers/validateBody.js';
 import {
   createContactSchema,
   updateContactSchema,
+  updateStatusContactSchema,
 } from '../schemas/contactsSchemas.js';
+
 import {
   addContact,
   getContactById,
@@ -11,6 +13,29 @@ import {
   removeContact,
   updateContact,
 } from '../services/contactsServices.js';
+
+export const createContact = async (req, res, next) => {
+  try {
+    const { value, error } = validateBody(createContactSchema, req.body);
+
+    if (error) throw new HttpError(400, error);
+
+    const { name, email, phone, favorite } = value;
+
+    const newContact = {
+      name,
+      email,
+      phone,
+      favorite,
+    };
+
+    const contact = await addContact(newContact);
+
+    res.status(201).json(contact);
+  } catch (error) {
+    next(error);
+  }
+};
 
 export const getAllContacts = async (req, res, next) => {
   try {
@@ -50,40 +75,29 @@ export const deleteContact = async (req, res, next) => {
   }
 };
 
-export const createContact = async (req, res, next) => {
-  try {
-    const { value, error } = validateBody(createContactSchema, req.body);
-
-    if (error) throw new HttpError(400, error);
-
-    const { name, email, phone } = value;
-
-    const newContact = {
-      name,
-      email,
-      phone,
-    };
-
-    const contact = await addContact(newContact);
-
-    res.status(201).json(contact);
-  } catch (error) {
-    next(error);
-  }
-};
-
 export const changeContact = async (req, res, next) => {
   try {
     const { value, error } = validateBody(updateContactSchema, req.body);
 
     if (error) throw new HttpError(400, error);
 
-    const { id } = req.params;
+    const contact = await updateContact(req.params.id, value);
 
-    const { name, email, phone } = value;
-    const updatingData = { name, email, phone };
+    if (!contact) throw new HttpError(404);
 
-    const contact = await updateContact(id, updatingData);
+    res.status(200).json(contact);
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const updateFavorite = async (req, res, next) => {
+  try {
+    const { value, error } = validateBody(updateStatusContactSchema, req.body);
+
+    if (error) throw new HttpError(400, error);
+
+    const contact = await updateContact(req.params.id, value);
 
     if (!contact) throw new HttpError(404);
 
