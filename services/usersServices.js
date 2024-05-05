@@ -1,4 +1,5 @@
 import bcrypt from 'bcrypt';
+import crypto from 'crypto';
 import { HttpError } from '../helpers/HttpError.js';
 
 export const getHashPassword = async password => {
@@ -10,4 +11,9 @@ export const getHashPassword = async password => {
   } catch (error) {
     throw new HttpError(500, 'Internal Server Error.');
   }
+};
+
+export const getAvatarLink = email => {
+  const hashedAvatar = crypto.createHash('md5').update(email).digest('hex');
+  return `https://gravatar.com/avatar/${hashedAvatar}.jpg?d=robohash`;
 };

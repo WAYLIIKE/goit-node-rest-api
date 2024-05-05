@@ -5,8 +5,12 @@ import {
   loginUser,
   logoutUser,
   registerUser,
+  updateAvatarUser,
 } from '../controllers/usersControllers.js';
-import { checkAuthToken } from '../middlewares/userMiddlewares.js';
+import {
+  checkAuthToken,
+  uploadAvatar,
+} from '../middlewares/userMiddlewares.js';
 
 const usersRouter = express.Router();
 
@@ -17,5 +21,7 @@ usersRouter.post('/login', loginUser);
 usersRouter.post('/logout', checkAuthToken, logoutUser);
 
 usersRouter.post('/current', checkAuthToken, currentUser);
+
+usersRouter.patch('/avatars', checkAuthToken, uploadAvatar, updateAvatarUser);
 
 export { usersRouter };
