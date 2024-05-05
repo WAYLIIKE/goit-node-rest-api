@@ -10,21 +10,22 @@ import {
 } from '../controllers/contactsControllers.js';
 
 import { checkContactId } from '../middlewares/contactMiddlewares.js';
+import { checkAuthToken } from '../middlewares/userMiddlewares.js';
 
 const contactsRouter = express.Router();
 
-contactsRouter.get('/', getAllContacts);
+contactsRouter.get('/', checkAuthToken, getAllContacts);
 
-contactsRouter.post('/', createContact);
+contactsRouter.post('/', checkAuthToken, createContact);
 
-contactsRouter.use('/:id', checkContactId);
+contactsRouter.use('/:id', checkAuthToken, checkContactId);
 
-contactsRouter.get('/:id', getOneContact);
+contactsRouter.get('/:id', checkAuthToken, getOneContact);
 
-contactsRouter.delete('/:id', deleteContact);
+contactsRouter.delete('/:id', checkAuthToken, deleteContact);
 
-contactsRouter.put('/:id', changeContact);
+contactsRouter.put('/:id', checkAuthToken, changeContact);
 
-contactsRouter.patch('/:id/favorite', updateFavorite);
+contactsRouter.patch('/:id/favorite', checkAuthToken, updateFavorite);
 
 export { contactsRouter };
