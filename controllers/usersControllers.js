@@ -11,17 +11,17 @@ import { getAvatarLink, getHashPassword } from '../services/usersServices.js';
 import Jimp from 'jimp';
 
 export const registerUser = async (req, res, next) => {
-  const { email } = req.body;
-
-  const isUser = await User.findOne({ email });
-
-  if (isUser) {
-    return res.status(409).json({
-      message: 'Email in use',
-    });
-  }
-
   try {
+    const { email } = req.body;
+
+    const isUser = await User.findOne({ email });
+
+    if (isUser) {
+      return res.status(409).json({
+        message: 'Email in use',
+      });
+    }
+
     const { value, error } = validateBody(authUserSchema, req.body);
 
     if (error) throw new HttpError(400, error);
@@ -46,8 +46,9 @@ export const registerUser = async (req, res, next) => {
 };
 
 export const loginUser = async (req, res, next) => {
-  const { email } = req.body;
   try {
+    const { email } = req.body;
+
     const user = await User.findOne({ email });
 
     if (!user) {

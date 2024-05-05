@@ -12,9 +12,9 @@ export async function listContacts(owner) {
 }
 
 // Returns contact object. Returns null, if contact with contactsID was undefined.
-export async function getContactById(contactId) {
+export async function getContactById(contactId, owner) {
   try {
-    const contact = await Contact.findById(contactId);
+    const contact = await Contact.findOne({ owner, _id: contactId });
 
     return contact;
   } catch (error) {
@@ -23,9 +23,9 @@ export async function getContactById(contactId) {
 }
 
 // Delete contact by id.
-export async function removeContact(contactId) {
+export async function removeContact(contactId, owner) {
   try {
-    const contact = await Contact.findByIdAndDelete(contactId);
+    const contact = await Contact.findOneAndDelete({ owner, _id: contactId });
     return contact;
   } catch (error) {
     return error;
@@ -44,11 +44,18 @@ export async function addContact(contact) {
 }
 
 // Returns updated contact object.
-export async function updateContact(id, contact) {
+export async function updateContact(contactId, contact, owner) {
   try {
-    const updatedContact = await Contact.findByIdAndUpdate(id, contact, {
-      new: true,
-    });
+    const updatedContact = await Contact.findOneAndUpdate(
+      {
+        _id: contactId,
+        owner,
+      },
+      contact,
+      {
+        new: true,
+      },
+    );
 
     return updatedContact;
   } catch (error) {
