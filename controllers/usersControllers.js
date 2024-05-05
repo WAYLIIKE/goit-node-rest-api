@@ -6,7 +6,7 @@ import Jimp from 'jimp';
 import { HttpError } from '../helpers/HttpError.js';
 import { validateBody } from '../helpers/validateBody.js';
 import { User } from '../models/userModel.js';
-import { authUserSchema } from '../schemas/usersSchemas.js';
+import { authUserSchema, emailSchema } from '../schemas/usersSchemas.js';
 import { getAvatarLink, getHashPassword } from '../services/usersServices.js';
 import { nanoid } from 'nanoid';
 import { sendEmail } from '../helpers/sendEmail.js';
@@ -162,45 +162,54 @@ export const updateAvatarUser = async (req, res, next) => {
 };
 
 export const verifyEmail = async (req, res, next) => {
-  const { verificationToken } = req.params;
+  try {
+    const { verificationToken } = req.params;
 
-  const user = await User.findOne({ verificationToken });
+    const user = await User.findOne({ verificationToken });
 
-  if (!user) {
-    throw HttpError(404, 'User not found');
+    if (!user) {
+      throw HttpError(404, 'User not found');
+    }
+
+    await User.findByIdAndUpdate(user._id, {
+      verify: true,
+      verificationToken: null,
+    });
+
+    res.json({
+      message: 'Verification successful',
+    });
+  } catch (error) {
+    next(error);
   }
-
-  await User.findByIdAndUpdate(user._id, {
-    verify: true,
-    verificationToken: null,
-  });
-
-  res.json({
-    message: 'Verification successful',
-  });
 };
 
-export const resendVerifyEmail = async (req, res) => {
-  const { email } = req.body;
+export const resendVerifyEmail = async (req, res, next) => {
+  try {
+    const { email } = req.body;
 
-  const { error } = validateBody(authUserSchema, req.body);
+    const { error } = validateBody(emailSchema, req.body);
 
-  if (error) throw new HttpError(400, error);
+    if (error) throw new HttpError(400, error);
 
-  const user = await User.findOne({ email });
+    const user = await User.findOne({ email });
 
-  if (user.verify) {
-    throw HttpError(400, 'Verification has already been passed');
+    console.log(user.verify);
+    if (user.verify)
+      throw new HttpError(400, 'Verification has already been passed');
+
+    const verifyEmail = {
+      to: email,
+      subject: 'Verify email',
+      html: `<a target="_blank" href="${process.env.BASE_URL}/api/users/verify/${user.verificationToken}">Click verify email</a>`,
+    };
+
+    await sendEmail(verifyEmail);
+
+    res.json({
+      message: 'Verification email sent',
+    });
+  } catch (error) {
+    next(error);
   }
-
-  const verifyEmail = {
-    to: email,
-    subject: 'Verify email',
-    html: `<a target="_blank" href="${BASE_URL}/api/users/verify/${user.verificationToken}">Click verify email</a>`,
-  };
-
-  await sendEmail(verifyEmail);
-  res.json({
-    message: 'Verification email sent',
-  });
 };
