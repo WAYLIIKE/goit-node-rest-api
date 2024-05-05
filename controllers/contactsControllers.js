@@ -27,11 +27,10 @@ export const createContact = async (req, res, next) => {
       email,
       phone,
       favorite,
+      owner: req.user._id,
     };
 
-    const { _id: owner } = req.user;
-
-    const contact = await addContact({ ...newContact, owner });
+    const contact = await addContact(newContact);
 
     res.status(201).json(contact);
   } catch (error) {
@@ -53,9 +52,10 @@ export const getAllContacts = async (req, res, next) => {
 
 export const getOneContact = async (req, res, next) => {
   try {
+    const { _id: owner } = req.user;
     const { id } = req.params;
 
-    const contact = await getContactById(id);
+    const contact = await getContactById(id, owner);
 
     if (!contact) throw new HttpError(404);
 
@@ -67,9 +67,10 @@ export const getOneContact = async (req, res, next) => {
 
 export const deleteContact = async (req, res, next) => {
   try {
+    const { _id: owner } = req.user;
     const { id } = req.params;
 
-    const contact = await removeContact(id);
+    const contact = await removeContact(id, owner);
 
     if (!contact) throw new HttpError(404);
 
@@ -81,11 +82,12 @@ export const deleteContact = async (req, res, next) => {
 
 export const changeContact = async (req, res, next) => {
   try {
+    const { _id: owner } = req.user;
     const { value, error } = validateBody(updateContactSchema, req.body);
 
     if (error) throw new HttpError(400, error);
 
-    const contact = await updateContact(req.params.id, value);
+    const contact = await updateContact(req.params.id, value, owner);
 
     if (!contact) throw new HttpError(404);
 
@@ -97,11 +99,12 @@ export const changeContact = async (req, res, next) => {
 
 export const updateFavorite = async (req, res, next) => {
   try {
+    const { _id: owner } = req.user;
     const { value, error } = validateBody(updateStatusContactSchema, req.body);
 
     if (error) throw new HttpError(400, error);
 
-    const contact = await updateContact(req.params.id, value);
+    const contact = await updateContact(req.params.id, value, owner);
 
     if (!contact) throw new HttpError(404);
 
