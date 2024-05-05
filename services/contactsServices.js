@@ -1,9 +1,9 @@
 import { Contact } from '../models/contactModel.js';
 
 // Returns contacts array.
-export async function listContacts() {
+export async function listContacts(owner) {
   try {
-    const contacts = await Contact.find();
+    const contacts = await Contact.find({ owner });
 
     return contacts;
   } catch (error) {

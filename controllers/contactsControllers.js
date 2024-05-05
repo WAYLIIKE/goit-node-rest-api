@@ -29,7 +29,9 @@ export const createContact = async (req, res, next) => {
       favorite,
     };
 
-    const contact = await addContact(newContact);
+    const { _id: owner } = req.user;
+
+    const contact = await addContact({ ...newContact, owner });
 
     res.status(201).json(contact);
   } catch (error) {
@@ -39,7 +41,9 @@ export const createContact = async (req, res, next) => {
 
 export const getAllContacts = async (req, res, next) => {
   try {
-    const contacts = await listContacts();
+    const { _id: owner } = req.user;
+
+    const contacts = await listContacts(owner);
 
     res.status(200).json(contacts);
   } catch (error) {
