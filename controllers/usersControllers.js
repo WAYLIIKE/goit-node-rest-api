@@ -1,11 +1,14 @@
+import fs from 'fs';
+import jwt from 'jsonwebtoken';
 import bcrypt from 'bcrypt';
+import path from 'path';
 
 import { HttpError } from '../helpers/HttpError.js';
 import { validateBody } from '../helpers/validateBody.js';
 import { User } from '../models/userModel.js';
 import { authUserSchema } from '../schemas/usersSchemas.js';
-import { getHashPassword } from '../services/usersServices.js';
-import jwt from 'jsonwebtoken';
+import { getAvatarLink, getHashPassword } from '../services/usersServices.js';
+import Jimp from 'jimp';
 
 export const registerUser = async (req, res, next) => {
   const { email } = req.body;
@@ -27,7 +30,9 @@ export const registerUser = async (req, res, next) => {
 
     value.password = passwordHashed;
 
-    const user = await User.create(value);
+    const avatar = getAvatarLink(value.email);
+
+    const user = await User.create({ ...value, avatarURL: avatar });
 
     res.status(201).json({
       user: {
@@ -107,6 +112,32 @@ export const currentUser = async (req, res, next) => {
     res
       .status(200)
       .json({ email: user.email, subscription: user.subscription });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const updateAvatarUser = async (req, res, next) => {
+  try {
+    if (!req.file) throw new HttpError(400);
+
+    Jimp.read(req.file.path, (err, img) => {
+      if (err) throw err;
+      img
+        .resize(100, 100) // resize
+        .quality(60) // set JPEG quality
+        .greyscale() // set greyscale
+        .write(path.join('public', 'avatars', req.file.filename)); // save
+    });
+
+    const { email } = req.user;
+
+    await User.findOneAndUpdate(
+      { email },
+      { avatarURL: `avatars/${req.file.filename}` },
+    );
+
+    res.status(200).json({ avatarURL: `avatars/${req.file.filename}` });
   } catch (error) {
     next(error);
   }
