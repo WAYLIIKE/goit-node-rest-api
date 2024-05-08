@@ -5,7 +5,9 @@ import {
   loginUser,
   logoutUser,
   registerUser,
+  resendVerifyEmail,
   updateAvatarUser,
+  verifyEmail,
 } from '../controllers/usersControllers.js';
 import {
   checkAuthToken,
@@ -23,5 +25,9 @@ usersRouter.post('/logout', checkAuthToken, logoutUser);
 usersRouter.post('/current', checkAuthToken, currentUser);
 
 usersRouter.patch('/avatars', checkAuthToken, uploadAvatar, updateAvatarUser);
+
+usersRouter.get('/verify/:verificationToken', verifyEmail);
+
+usersRouter.post('/verify', resendVerifyEmail);
 
 export { usersRouter };

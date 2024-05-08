@@ -1,14 +1,15 @@
-import fs from 'fs';
 import jwt from 'jsonwebtoken';
 import bcrypt from 'bcrypt';
 import path from 'path';
+import Jimp from 'jimp';
 
 import { HttpError } from '../helpers/HttpError.js';
 import { validateBody } from '../helpers/validateBody.js';
 import { User } from '../models/userModel.js';
-import { authUserSchema } from '../schemas/usersSchemas.js';
+import { authUserSchema, emailSchema } from '../schemas/usersSchemas.js';
 import { getAvatarLink, getHashPassword } from '../services/usersServices.js';
-import Jimp from 'jimp';
+import { nanoid } from 'nanoid';
+import { sendEmail } from '../helpers/sendEmail.js';
 
 export const registerUser = async (req, res, next) => {
   try {
@@ -32,7 +33,21 @@ export const registerUser = async (req, res, next) => {
 
     const avatar = getAvatarLink(value.email);
 
-    const user = await User.create({ ...value, avatarURL: avatar });
+    const verificationToken = nanoid();
+
+    const user = await User.create({
+      ...value,
+      avatarURL: avatar,
+      verificationToken,
+    });
+
+    const verifyEmail = {
+      to: email,
+      subject: 'Verify email',
+      html: `<a target="_blank" href="${process.env.BASE_URL}/api/users/verify/${verificationToken}">Click to verify email</a>`,
+    };
+
+    await sendEmail(verifyEmail);
 
     res.status(201).json({
       user: {
@@ -50,6 +65,8 @@ export const loginUser = async (req, res, next) => {
     const { email } = req.body;
 
     const user = await User.findOne({ email });
+
+    if (!user.verify) throw new HttpError(401, 'Email not verified');
 
     if (!user) {
       return res.status(401).json({
@@ -139,6 +156,58 @@ export const updateAvatarUser = async (req, res, next) => {
     );
 
     res.status(200).json({ avatarURL: `avatars/${req.file.filename}` });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const verifyEmail = async (req, res, next) => {
+  try {
+    const { verificationToken } = req.params;
+
+    const user = await User.findOne({ verificationToken });
+
+    if (!user) {
+      throw HttpError(404, 'User not found');
+    }
+
+    await User.findByIdAndUpdate(user._id, {
+      verify: true,
+      verificationToken: null,
+    });
+
+    res.json({
+      message: 'Verification successful',
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const resendVerifyEmail = async (req, res, next) => {
+  try {
+    const { email } = req.body;
+
+    const { error } = validateBody(emailSchema, req.body);
+
+    if (error) throw new HttpError(400, error);
+
+    const user = await User.findOne({ email });
+
+    if (user.verify)
+      throw new HttpError(400, 'Verification has already been passed');
+
+    const verifyEmail = {
+      to: email,
+      subject: 'Verify email',
+      html: `<a target="_blank" href="${process.env.BASE_URL}/api/users/verify/${user.verificationToken}">Click verify email</a>`,
+    };
+
+    await sendEmail(verifyEmail);
+
+    res.json({
+      message: 'Verification email sent',
+    });
   } catch (error) {
     next(error);
   }
