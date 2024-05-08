@@ -16,7 +16,31 @@ import {
 
 const usersRouter = express.Router();
 
+/**
+ * @openapi
+ * /register:
+ *  post:
+ *     tags:
+ *     - register
+ *     description: Responds if the app is up and running
+ *     responses:
+ *       200:
+ *         description: App is up and running
+ */
+
 usersRouter.post('/register', registerUser);
+
+/**
+ * @swagger
+ * /login:
+ *  post:
+ *     tags:
+ *     - login
+ *     description: Responds if the app is up and running
+ *     responses:
+ *       200:
+ *         description: App is up and running
+ */
 
 usersRouter.post('/login', loginUser);
 
